@@ -42,10 +42,10 @@ export function AuthProvider({ children }) {
   const isAdmin = user?.email === ADMIN_EMAIL || profile?.is_admin === true
 
   const signInWithGoogle = () =>
-    supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/app` }
-    })
+  supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: `${window.location.origin}/auth/callback` }
+  })
 
   const signOut = () => supabase.auth.signOut()
 
