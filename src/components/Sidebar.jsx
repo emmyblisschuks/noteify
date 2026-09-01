@@ -28,7 +28,7 @@ const NAV = [
     color: '#2a9d99', bg: '#e6f7f7'
   },
   {
-    path: '/app/api', label: 'API',
+    path: '/app/integrations', label: 'Integrations',
     icon: <Code2 size={15} />,
     color: '#dd5b00', bg: '#fff1e6'
   },
