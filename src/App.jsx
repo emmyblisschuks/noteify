@@ -14,7 +14,7 @@ import CRMPage from './pages/CRMPage'
 import DatabasePage from './pages/DatabasePage'
 import ShareView from './pages/ShareView'
 import AdminDashboard from './pages/admin/AdminDashboard'
-import APIPage from './pages/APIPage'
+import IntegrationsPage from './pages/IntegrationsPage'
 import { Menu, X } from 'lucide-react'
 
 function ProtectedRoute({ children }) {
@@ -66,7 +66,7 @@ function AppShell() {
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/crm" element={<CRMPage />} />
             <Route path="/database" element={<DatabasePage />} />
-            <Route path="/api" element={<APIPage />} />
+            <Route path="/integrations" element={<IntegrationsPage />} />
           </Routes>
         </div>
       </div>
