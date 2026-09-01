@@ -1,4 +1,5 @@
 // src/pages/HomePage.jsx
+import { Plus, FileText, CheckSquare, Users, Database } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
@@ -45,10 +46,10 @@ export default function HomePage({ pages, onNewPage }) {
       {/* Quick actions */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 40 }}>
         {[
-          { icon: '📝', label: 'New page', action: handleNewPage, color: '#d6b6f6' },
-          { icon: '✅', label: 'View tasks', action: () => navigate('/app/tasks'), color: '#62aef0' },
-          { icon: '🤝', label: 'Open CRM', action: () => navigate('/app/crm'), color: '#ff64c8' },
-          { icon: '🗄️', label: 'Database', action: () => navigate('/app/database'), color: '#2a9d99' },
+          { icon: <FileText size={28} color="#d6b6f6" />, label: 'New page', action: handleNewPage, color: '#d6b6f6' },
+{ icon: <CheckSquare size={28} color="#62aef0" />, label: 'View tasks', action: () => navigate('/app/tasks'), color: '#62aef0' },
+{ icon: <Users size={28} color="#ff64c8" />, label: 'Open CRM', action: () => navigate('/app/crm'), color: '#ff64c8' },
+{ icon: <Database size={28} color="#2a9d99" />, label: 'Database', action: () => navigate('/app/database'), color: '#2a9d99' },
         ].map(item => (
           <button key={item.label} onClick={item.action} className="card"
             style={{ cursor: 'pointer', textAlign: 'left', transition: 'box-shadow 0.15s', borderTop: `3px solid ${item.color}` }}
