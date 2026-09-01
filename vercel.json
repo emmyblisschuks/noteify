@@ -1,0 +1,8 @@
+{
+  "rewrites": [{ "source": "/(.*)", "destination": "/" }],
+  "env": {
+    "VITE_SUPABASE_URL": "https://neomyylzjdkawsmsuyar.supabase.co",
+    "VITE_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5lb215eWx6amRrYXdzbXN1eWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgxOTI4MjIsImV4cCI6MjEwMzc2ODgyMn0.0cQeejohdkm5rJPuuukR-8wy2vVuhqnQQSRu_ck7TcA",
+    "VITE_ADMIN_EMAIL": "emmyblisschuks@gmail.com"
+  }
+}
