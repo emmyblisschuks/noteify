@@ -1,9 +1,9 @@
 // src/pages/HomePage.jsx
-import { Plus, FileText, CheckSquare, Users, Database } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { Plus, FileText, CheckSquare, Users, Database } from 'lucide-react'
 import { format } from 'date-fns'
 
 export default function HomePage({ pages, onNewPage }) {
@@ -34,6 +34,13 @@ export default function HomePage({ pages, onNewPage }) {
   const firstName = profile?.full_name?.split(' ')[0] || 'there'
   const recentPages = pages.filter(p => !p.is_deleted).slice(0, 6)
 
+  const quickActions = [
+    { icon: <FileText size={28} color="#d6b6f6" />, label: 'New page', action: handleNewPage, color: '#d6b6f6' },
+    { icon: <CheckSquare size={28} color="#62aef0" />, label: 'View tasks', action: () => navigate('/app/tasks'), color: '#62aef0' },
+    { icon: <Users size={28} color="#ff64c8" />, label: 'Open CRM', action: () => navigate('/app/crm'), color: '#ff64c8' },
+    { icon: <Database size={28} color="#2a9d99" />, label: 'Database', action: () => navigate('/app/database'), color: '#2a9d99' },
+  ]
+
   return (
     <div style={{ padding: '48px 40px', maxWidth: 900, margin: '0 auto' }}>
       {/* Greeting */}
@@ -44,17 +51,12 @@ export default function HomePage({ pages, onNewPage }) {
 
       {/* Quick actions */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 40 }}>
-        {[
-          { icon: <FileText size={28} color="#d6b6f6" />, label: 'New page', action: handleNewPage, color: '#d6b6f6' },
-{ icon: <CheckSquare size={28} color="#62aef0" />, label: 'View tasks', action: () => navigate('/app/tasks'), color: '#62aef0' },
-{ icon: <Users size={28} color="#ff64c8" />, label: 'Open CRM', action: () => navigate('/app/crm'), color: '#ff64c8' },
-{ icon: <Database size={28} color="#2a9d99" />, label: 'Database', action: () => navigate('/app/database'), color: '#2a9d99' },
-        ].map(item => (
+        {quickActions.map(item => (
           <button key={item.label} onClick={item.action} className="card"
             style={{ cursor: 'pointer', textAlign: 'left', transition: 'box-shadow 0.15s', borderTop: `3px solid ${item.color}` }}
             onMouseEnter={e => e.currentTarget.style.boxShadow = 'var(--shadow-soft)'}
             onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
-            <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
+            <div style={{ marginBottom: 8 }}>{item.icon}</div>
             <div style={{ fontSize: 14, fontWeight: 500 }}>{item.label}</div>
           </button>
         ))}
