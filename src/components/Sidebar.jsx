@@ -1,131 +1,171 @@
-// src/pages/HomePage.jsx
-import { useState, useEffect } from 'react'
+// src/components/Sidebar.jsx
+import { useState } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { useNavigate } from 'react-router-dom'
+import { useTheme } from '../context/ThemeContext'
 import { supabase } from '../lib/supabase'
-import { Plus, FileText, CheckSquare, Users, Database } from 'lucide-react'
-import { format } from 'date-fns'
+import { FileText, CheckSquare, Users, Database, Code2, Plus, Sun, Moon, LogOut, Shield, ChevronDown, ChevronRight } from 'lucide-react'
 
-export default function HomePage({ pages, onNewPage }) {
-  const { user, profile, workspace } = useAuth()
+const NAV = [
+  {
+    path: '/app', label: 'Home',
+    icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+    color: '#d6b6f6', bg: '#f3eeff'
+  },
+  {
+    path: '/app/tasks', label: 'Tasks',
+    icon: <CheckSquare size={15} />,
+    color: '#62aef0', bg: '#e8f4ff'
+  },
+  {
+    path: '/app/crm', label: 'CRM',
+    icon: <Users size={15} />,
+    color: '#ff64c8', bg: '#fff0fb'
+  },
+  {
+    path: '/app/database', label: 'Database',
+    icon: <Database size={15} />,
+    color: '#2a9d99', bg: '#e6f7f7'
+  },
+]
+
+export default function Sidebar({ pages = [], onNewPage, mobileOpen, setMobileOpen }) {
+  const { user, profile, workspace, signOut, isAdmin } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
-  const [tasks, setTasks] = useState([])
-  const [deals, setDeals] = useState([])
-
-  useEffect(() => { if (workspace) fetchData() }, [workspace])
-
-  async function fetchData() {
-    const [{ data: t }, { data: d }] = await Promise.all([
-      supabase.from('tasks').select('*').eq('workspace_id', workspace.id).eq('status', 'todo').order('created_at', { ascending: false }).limit(5),
-      supabase.from('crm_deals').select('*').eq('workspace_id', workspace.id).in('stage', ['lead','qualified','proposal']).limit(5),
-    ])
-    setTasks(t || [])
-    setDeals(d || [])
-  }
+  const location = useLocation()
+  const [pagesOpen, setPagesOpen] = useState(true)
 
   const handleNewPage = async () => {
     if (!workspace) return
-    const { data } = await supabase.from('pages').insert({ workspace_id: workspace.id, owner_id: user.id, title: 'Untitled', type: 'page' }).select().single()
+    const { data } = await supabase.from('pages').insert({
+      workspace_id: workspace.id,
+      owner_id: user.id,
+      title: 'Untitled',
+      type: 'page',
+    }).select().single()
     if (data) { onNewPage(data); navigate(`/app/page/${data.id}`) }
   }
 
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
-  const firstName = profile?.full_name?.split(' ')[0] || 'there'
-  const recentPages = pages.filter(p => !p.is_deleted).slice(0, 6)
-
-  const quickActions = [
-    { icon: <FileText size={28} color="#d6b6f6" />, label: 'New page', action: handleNewPage, color: '#d6b6f6' },
-    { icon: <CheckSquare size={28} color="#62aef0" />, label: 'View tasks', action: () => navigate('/app/tasks'), color: '#62aef0' },
-    { icon: <Users size={28} color="#ff64c8" />, label: 'Open CRM', action: () => navigate('/app/crm'), color: '#ff64c8' },
-    { icon: <Database size={28} color="#2a9d99" />, label: 'Database', action: () => navigate('/app/database'), color: '#2a9d99' },
-  ]
-
   return (
-    <div style={{ padding: '48px 40px', maxWidth: 900, margin: '0 auto' }}>
-      {/* Greeting */}
-      <div style={{ marginBottom: 40 }}>
-        <h1 style={{ fontSize: 36, fontWeight: 700, letterSpacing: -1, marginBottom: 6 }}>{greeting}, {firstName} 👋</h1>
-        <p style={{ color: 'var(--color-ink-muted)', fontSize: 15 }}>{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
-      </div>
+    <>
+      {mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 99 }} />}
+      <aside className={`sidebar${mobileOpen ? ' open' : ''}`}>
 
-      {/* Quick actions */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 40 }}>
-        {quickActions.map(item => (
-          <button key={item.label} onClick={item.action} className="card"
-            style={{ cursor: 'pointer', textAlign: 'left', transition: 'box-shadow 0.15s', borderTop: `3px solid ${item.color}` }}
-            onMouseEnter={e => e.currentTarget.style.boxShadow = 'var(--shadow-soft)'}
-            onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}>
-            <div style={{ marginBottom: 8 }}>{item.icon}</div>
-            <div style={{ fontSize: 14, fontWeight: 500 }}>{item.label}</div>
-          </button>
-        ))}
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-        {/* Recent pages */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600 }}>Recent pages</h2>
-            <button className="btn-utility" onClick={handleNewPage} style={{ fontSize: 12, gap: 4 }}><Plus size={12} /> New</button>
+        {/* Workspace header */}
+        <div style={{ padding: '12px 12px 8px', borderBottom: '1px solid var(--color-hairline)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px', borderRadius: 'var(--rounded-md)', cursor: 'pointer' }}
+            onClick={() => navigate('/app')}>
+            <div style={{ width: 28, height: 28, borderRadius: 6, background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 700 }}>
+              {workspace?.name?.[0] || 'N'}
+            </div>
+            <div style={{ flex: 1, overflow: 'hidden' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {workspace?.name || 'My Workspace'}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--color-ink-faint)' }}>{profile?.plan === 'pro' ? 'Pro plan' : 'Free plan'}</div>
+            </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {recentPages.length === 0 ? (
-              <div style={{ padding: '20px 0', color: 'var(--color-ink-faint)', fontSize: 14 }}>No pages yet. Create your first one!</div>
-            ) : recentPages.map(p => (
-              <button key={p.id} onClick={() => navigate(`/app/page/${p.id}`)}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 'var(--rounded-md)', cursor: 'pointer', textAlign: 'left', transition: 'background 0.1s' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--color-canvas-soft)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                <span style={{ fontSize: 16 }}>{p.icon || '📄'}</span>
-                <span style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title || 'Untitled'}</span>
+        </div>
+
+        {/* Nav */}
+        <div className="sidebar-section">
+          {NAV.map(item => {
+            const isActive = location.pathname === item.path
+            return (
+              <button key={item.path}
+                className={`sidebar-row${isActive ? ' active' : ''}`}
+                onClick={() => { navigate(item.path); setMobileOpen(false) }}>
+                <span style={{
+                  width: 22, height: 22, borderRadius: 5, flexShrink: 0,
+                  background: isActive ? item.color + '33' : item.bg,
+                  color: item.color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'background 0.15s'
+                }}>
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
               </button>
-            ))}
+            )
+          })}
+        </div>
+
+        {/* Pages */}
+        <div className="sidebar-section" style={{ flex: 1 }}>
+          <div className="sidebar-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+            onClick={() => setPagesOpen(o => !o)}>
+            <span>Pages</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button onClick={(e) => { e.stopPropagation(); handleNewPage() }}
+                style={{ padding: 2, borderRadius: 4, color: 'var(--color-ink-faint)', display: 'flex' }}>
+                <Plus size={13} />
+              </button>
+              {pagesOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+            </div>
+          </div>
+          {pagesOpen && (
+            <div>
+              {pages.filter(p => !p.is_deleted).map(page => (
+                <button key={page.id} className={`sidebar-row${location.pathname === `/app/page/${page.id}` ? ' active' : ''}`}
+                  onClick={() => { navigate(`/app/page/${page.id}`); setMobileOpen(false) }}>
+                  <span style={{ width: 22, height: 22, borderRadius: 5, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FileText size={12} color="#888" />
+                  </span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, textAlign: 'left' }}>{page.title || 'Untitled'}</span>
+                </button>
+              ))}
+              {pages.length === 0 && (
+                <div style={{ padding: '6px 8px', fontSize: 13, color: 'var(--color-ink-faint)', fontStyle: 'italic' }}>No pages yet</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom */}
+        <div style={{ borderTop: '1px solid var(--color-hairline)', padding: 8 }}>
+          {isAdmin && (
+            <button className="sidebar-row" onClick={() => navigate('/admin')}>
+              <span style={{ width: 22, height: 22, borderRadius: 5, background: '#e8f0ff', color: '#213183', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Shield size={13} />
+              </span>
+              <span>Admin Dashboard</span>
+            </button>
+          )}
+
+          {/* Integrations — above dark mode */}
+          <button className={`sidebar-row${location.pathname === '/app/integrations' ? ' active' : ''}`}
+            onClick={() => { navigate('/app/integrations'); setMobileOpen(false) }}>
+            <span style={{ width: 22, height: 22, borderRadius: 5, background: '#fff1e6', color: '#dd5b00', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Code2 size={13} />
+            </span>
+            <span>Integrations</span>
+          </button>
+
+          <button className="sidebar-row" onClick={toggleTheme}>
+            <span style={{ width: 22, height: 22, borderRadius: 5, background: 'var(--color-hairline)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {theme === 'light' ? <Moon size={13} /> : <Sun size={13} />}
+            </span>
+            <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
+          </button>
+
+          <button className="sidebar-row" onClick={() => { signOut(); navigate('/') }}>
+            <span style={{ width: 22, height: 22, borderRadius: 5, background: '#fae5e5', color: '#c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <LogOut size={13} />
+            </span>
+            <span>Sign out</span>
+          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 8px 4px', marginTop: 4 }}>
+            <img src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'U')}&size=28`}
+              alt="avatar" style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0 }} />
+            <div style={{ fontSize: 13, overflow: 'hidden' }}>
+              <div style={{ fontWeight: 500, textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}>{profile?.full_name || user?.email}</div>
+            </div>
           </div>
         </div>
 
-        {/* Upcoming tasks */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600 }}>Upcoming tasks</h2>
-            <button className="btn-utility" onClick={() => navigate('/app/tasks')} style={{ fontSize: 12 }}>View all</button>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {tasks.length === 0 ? (
-              <div style={{ padding: '20px 0', color: 'var(--color-ink-faint)', fontSize: 14 }}>All clear! No pending tasks.</div>
-            ) : tasks.map(t => (
-              <div key={t.id} onClick={() => navigate('/app/tasks')}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 'var(--rounded-md)', cursor: 'pointer', transition: 'background 0.1s' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--color-canvas-soft)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                <span style={{ fontSize: 15 }}>◯</span>
-                <span style={{ fontSize: 14, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
-                {t.due_date && <span style={{ fontSize: 12, color: 'var(--color-ink-faint)' }}>{format(new Date(t.due_date), 'MMM d')}</span>}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Active deals */}
-      {deals.length > 0 && (
-        <div style={{ marginTop: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 16, fontWeight: 600 }}>Active deals</h2>
-            <button className="btn-utility" onClick={() => navigate('/app/crm')} style={{ fontSize: 12 }}>CRM →</button>
-          </div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            {deals.map(d => (
-              <div key={d.id} onClick={() => navigate('/app/crm')} className="card"
-                style={{ cursor: 'pointer', minWidth: 160, flex: '0 0 auto', padding: '12px 14px' }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>{d.title}</div>
-                <div style={{ fontSize: 13, color: 'var(--color-primary)' }}>₦{(d.value || 0).toLocaleString()}</div>
-                <div style={{ fontSize: 11, color: 'var(--color-ink-faint)', marginTop: 4, textTransform: 'capitalize' }}>{d.stage}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+      </aside>
+    </>
   )
 }
