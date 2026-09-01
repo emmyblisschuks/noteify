@@ -55,7 +55,7 @@ export default function LandingPage() {
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
-  const handleCTA = () => user ? navigate('/app') : signInWithGoogle()
+  const handleCTA = () => user ? navigate('/app') : navigate('/login')
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--color-canvas)' }}>
@@ -81,7 +81,7 @@ export default function LandingPage() {
           </button>
           {user
             ? <button className="btn-primary" style={{ padding: '6px 16px', fontSize: 14 }} onClick={() => navigate('/app')}>Open workspace</button>
-            : <button className="btn-primary" style={{ padding: '6px 16px', fontSize: 14 }} onClick={signInWithGoogle}>Sign in with Google</button>
+            : <button className="btn-primary" style={{ padding: '6px 16px', fontSize: 14 }} onClick={() => navigate('/login')}>Sign in</button>
           }
         </div>
       </nav>
