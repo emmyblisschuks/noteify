@@ -8,11 +8,8 @@ export default function AuthCallback() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate('/app', { replace: true })
-      } else {
-        navigate('/login', { replace: true })
-      }
+      if (session) navigate('/app', { replace: true })
+      else navigate('/login', { replace: true })
     })
   }, [])
 
