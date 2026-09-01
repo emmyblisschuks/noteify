@@ -6,7 +6,7 @@ import { supabase } from './lib/supabase'
 import Sidebar from './components/Sidebar'
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
-import AuthCallback from './pages/AuthCallback'   // ← ADD THIS LINE
+import AuthCallback from './pages/AuthCallback'
 import HomePage from './pages/HomePage'
 import PageView from './pages/PageView'
 import TasksPage from './pages/TasksPage'
@@ -14,6 +14,7 @@ import CRMPage from './pages/CRMPage'
 import DatabasePage from './pages/DatabasePage'
 import ShareView from './pages/ShareView'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import APIPage from './pages/APIPage'
 import { Menu, X } from 'lucide-react'
 
 function ProtectedRoute({ children }) {
@@ -32,8 +33,10 @@ function AppShell() {
   const [pages, setPages] = useState([])
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
+
   useEffect(() => { if (workspace) fetchPages() }, [workspace])
   useEffect(() => { setMobileOpen(false) }, [location.pathname])
+
   async function fetchPages() {
     const { data } = await supabase
       .from('pages')
@@ -43,8 +46,10 @@ function AppShell() {
       .order('created_at', { ascending: false })
     setPages(data || [])
   }
+
   const handleNewPage = (page) => setPages(p => [page, ...p])
   const handleTitleChange = (id, title) => setPages(p => p.map(x => x.id === id ? { ...x, title } : x))
+
   return (
     <div className="app-shell">
       <Sidebar pages={pages} onNewPage={handleNewPage} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
@@ -61,6 +66,7 @@ function AppShell() {
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/crm" element={<CRMPage />} />
             <Route path="/database" element={<DatabasePage />} />
+            <Route path="/api" element={<APIPage />} />
           </Routes>
         </div>
       </div>
@@ -73,7 +79,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />  {/* ← ADD THIS LINE */}
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/share/:token" element={<ShareView />} />
       <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
       <Route path="/app/*" element={<ProtectedRoute><AppShell /></ProtectedRoute>} />
