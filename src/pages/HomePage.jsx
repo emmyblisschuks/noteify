@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { Plus, FileText, CheckSquare, Users } from 'lucide-react'
 import { format } from 'date-fns'
 
 export default function HomePage({ pages, onNewPage }) {
