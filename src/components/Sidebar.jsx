@@ -4,13 +4,34 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { supabase } from '../lib/supabase'
-import { FileText, CheckSquare, Users, TrendingUp, Database, Plus, Sun, Moon, LogOut, Settings, Shield, ChevronDown, ChevronRight, Hash } from 'lucide-react'
+import { FileText, CheckSquare, Users, Database, Code2, Plus, Sun, Moon, LogOut, Shield, ChevronDown, ChevronRight } from 'lucide-react'
 
 const NAV = [
-  { path: '/app', icon: '🏠', label: 'Home' },
-  { path: '/app/tasks', icon: '✅', label: 'Tasks' },
-  { path: '/app/crm', icon: '🤝', label: 'CRM' },
-  { path: '/app/database', icon: '🗄️', label: 'Database' },
+  {
+    path: '/app', label: 'Home',
+    icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+    color: '#d6b6f6', bg: '#f3eeff'
+  },
+  {
+    path: '/app/tasks', label: 'Tasks',
+    icon: <CheckSquare size={15} />,
+    color: '#62aef0', bg: '#e8f4ff'
+  },
+  {
+    path: '/app/crm', label: 'CRM',
+    icon: <Users size={15} />,
+    color: '#ff64c8', bg: '#fff0fb'
+  },
+  {
+    path: '/app/database', label: 'Database',
+    icon: <Database size={15} />,
+    color: '#2a9d99', bg: '#e6f7f7'
+  },
+  {
+    path: '/app/api', label: 'API',
+    icon: <Code2 size={15} />,
+    color: '#dd5b00', bg: '#fff1e6'
+  },
 ]
 
 export default function Sidebar({ pages = [], onNewPage, mobileOpen, setMobileOpen }) {
@@ -35,6 +56,7 @@ export default function Sidebar({ pages = [], onNewPage, mobileOpen, setMobileOp
     <>
       {mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 99 }} />}
       <aside className={`sidebar${mobileOpen ? ' open' : ''}`}>
+
         {/* Workspace header */}
         <div style={{ padding: '12px 12px 8px', borderBottom: '1px solid var(--color-hairline)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px', borderRadius: 'var(--rounded-md)', cursor: 'pointer' }}
@@ -46,20 +68,32 @@ export default function Sidebar({ pages = [], onNewPage, mobileOpen, setMobileOp
               <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {workspace?.name || 'My Workspace'}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--color-ink-faint)' }}>{profile?.plan === 'pro' ? '⭐ Pro' : 'Free plan'}</div>
+              <div style={{ fontSize: 11, color: 'var(--color-ink-faint)' }}>{profile?.plan === 'pro' ? 'Pro plan' : 'Free plan'}</div>
             </div>
           </div>
         </div>
 
         {/* Nav */}
         <div className="sidebar-section">
-          {NAV.map(item => (
-            <button key={item.path} className={`sidebar-row${location.pathname === item.path ? ' active' : ''}`}
-              onClick={() => { navigate(item.path); setMobileOpen(false) }}>
-              <span>{item.icon}</span>
-              <span>{item.label}</span>
-            </button>
-          ))}
+          {NAV.map(item => {
+            const isActive = location.pathname === item.path
+            return (
+              <button key={item.path}
+                className={`sidebar-row${isActive ? ' active' : ''}`}
+                onClick={() => { navigate(item.path); setMobileOpen(false) }}>
+                <span style={{
+                  width: 22, height: 22, borderRadius: 5, flexShrink: 0,
+                  background: isActive ? item.color + '33' : item.bg,
+                  color: item.color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  transition: 'background 0.15s'
+                }}>
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
+              </button>
+            )
+          })}
         </div>
 
         {/* Pages */}
@@ -80,7 +114,9 @@ export default function Sidebar({ pages = [], onNewPage, mobileOpen, setMobileOp
               {pages.filter(p => !p.is_deleted).map(page => (
                 <button key={page.id} className={`sidebar-row${location.pathname === `/app/page/${page.id}` ? ' active' : ''}`}
                   onClick={() => { navigate(`/app/page/${page.id}`); setMobileOpen(false) }}>
-                  <span style={{ fontSize: 14 }}>{page.icon || '📄'}</span>
+                  <span style={{ width: 22, height: 22, borderRadius: 5, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FileText size={12} color="#888" />
+                  </span>
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, textAlign: 'left' }}>{page.title || 'Untitled'}</span>
                 </button>
               ))}
@@ -95,26 +131,33 @@ export default function Sidebar({ pages = [], onNewPage, mobileOpen, setMobileOp
         <div style={{ borderTop: '1px solid var(--color-hairline)', padding: 8 }}>
           {isAdmin && (
             <button className="sidebar-row" onClick={() => navigate('/admin')}>
-              <Shield size={14} />
+              <span style={{ width: 22, height: 22, borderRadius: 5, background: '#e8f0ff', color: '#213183', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Shield size={13} />
+              </span>
               <span>Admin Dashboard</span>
             </button>
           )}
           <button className="sidebar-row" onClick={toggleTheme}>
-            {theme === 'light' ? <Moon size={14} /> : <Sun size={14} />}
+            <span style={{ width: 22, height: 22, borderRadius: 5, background: 'var(--color-hairline)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              {theme === 'light' ? <Moon size={13} /> : <Sun size={13} />}
+            </span>
             <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
           </button>
           <button className="sidebar-row" onClick={() => { signOut(); navigate('/') }}>
-            <LogOut size={14} />
+            <span style={{ width: 22, height: 22, borderRadius: 5, background: '#fae5e5', color: '#c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <LogOut size={13} />
+            </span>
             <span>Sign out</span>
           </button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', marginTop: 4 }}>
-            <img src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'U')}`}
-              alt="avatar" style={{ width: 26, height: 26, borderRadius: '50%' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 8px 4px', marginTop: 4 }}>
+            <img src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'U')}&size=28`}
+              alt="avatar" style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0 }} />
             <div style={{ fontSize: 13, overflow: 'hidden' }}>
               <div style={{ fontWeight: 500, textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}>{profile?.full_name || user?.email}</div>
             </div>
           </div>
         </div>
+
       </aside>
     </>
   )
