@@ -99,11 +99,11 @@ function useScrollReveal() {
 
 // Floating note cards for hero
 const NOTES = [
-  { text: '📝 Meeting notes — Q3 review...', top: '18%', left: '6%', delay: 0, rotate: -4 },
-  { text: '✅ Finish landing page design', top: '55%', left: '4%', delay: 0.3, rotate: 3 },
-  { text: '📊 CRM: 3 new leads today', top: '75%', left: '8%', delay: 0.6, rotate: -2 },
-  { text: '🗒️ Ideas for v2 features...', top: '20%', right: '5%', delay: 0.2, rotate: 4 },
-  { text: '📅 Sprint planning — Monday', top: '58%', right: '4%', delay: 0.5, rotate: -3 },
+  { text: '📝 Project roadmap — Q4 2026', top: '18%', left: '6%', delay: 0, rotate: -4 },
+  { text: '✅ Follow up with the client', top: '55%', left: '4%', delay: 0.3, rotate: 3 },
+  { text: '📊 CRM: 5 new leads this week', top: '75%', left: '8%', delay: 0.6, rotate: -2 },
+  { text: '🗒️ Weekly team sync notes', top: '20%', right: '5%', delay: 0.2, rotate: 4 },
+  { text: '📅 Sprint planning — Thursday', top: '58%', right: '4%', delay: 0.5, rotate: -3 },
 ]
 
 function FloatingCard({ note, index }) {
