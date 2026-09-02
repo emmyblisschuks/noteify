@@ -32,6 +32,7 @@ function AppShell() {
   const { workspace } = useAuth()
   const [pages, setPages] = useState([])
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
   const location = useLocation()
 
   useEffect(() => { if (workspace) fetchPages() }, [workspace])
@@ -52,10 +53,25 @@ function AppShell() {
 
   return (
     <div className="app-shell">
-      <Sidebar pages={pages} onNewPage={handleNewPage} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+      <Sidebar
+        pages={pages}
+        onNewPage={handleNewPage}
+        mobileOpen={mobileOpen}
+        setMobileOpen={setMobileOpen}
+        collapsed={collapsed}
+        setCollapsed={setCollapsed}
+      />
       <div className="main-content">
         <div className="topbar">
-          <button onClick={() => setMobileOpen(o => !o)} style={{ display: 'flex', padding: 6, borderRadius: 'var(--rounded-md)', color: 'var(--color-ink-muted)' }}>
+          <button
+            onClick={() => {
+              if (window.innerWidth <= 768) {
+                setMobileOpen(o => !o)
+              } else {
+                setCollapsed(o => !o)
+              }
+            }}
+            style={{ display: 'flex', padding: 6, borderRadius: 'var(--rounded-md)', color: 'var(--color-ink-muted)' }}>
             {mobileOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
