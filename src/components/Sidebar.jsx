@@ -59,9 +59,9 @@ function WorkspaceDropdown({ workspace, profile, user, signOut, navigate, onClos
       {/* Actions */}
       <div style={{ padding: '6px 0' }}>
         {[
-          { icon: <ArrowUpCircle size={15} />, label: 'Upgrade', color: 'var(--color-primary)', action: () => {} },
-          { icon: <Settings size={15} />, label: 'Settings', action: () => {} },
-          { icon: <UserPlus size={15} />, label: 'Invite members', action: () => {} },
+          { icon: <ArrowUpCircle size={15} />, label: 'Upgrade', color: 'var(--color-primary)', action: () => { navigate('/app/upgrade'); onClose() } },
+          { icon: <Settings size={15} />, label: 'Settings', action: () => { navigate('/app/settings'); onClose() } },
+          { icon: <UserPlus size={15} />, label: 'Invite members', action: () => { navigate('/app/invite'); onClose() } },
           { icon: <UserCog size={15} />, label: 'Add account', action: () => {} },
         ].map(item => (
           <button key={item.label} onClick={item.action} style={{
