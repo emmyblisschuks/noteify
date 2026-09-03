@@ -61,11 +61,14 @@ export default function IntegrationsPage() {
     if (!newKeyName.trim()) return
     setLoadingKey(true)
     const rawKey = generateKey()
-    const { data, error } = await supabase.from('api_keys').insert({
-      owner_id: user.id,
-      name: newKeyName.trim(),
-      key_hash: rawKey, // in production you'd hash this server-side
-    }).select().single()
+   const { data, error } = await supabase.from('webhooks').insert({
+  workspace_id: workspace.id,
+  owner_id: user.id,
+  name: webhookName.trim(),
+  url: webhookUrl.trim(),
+  events: selectedEvents,
+  active: true,
+}).select().single()
     if (!error) {
       setCreatedKey(rawKey)
       setNewKeyName('')
