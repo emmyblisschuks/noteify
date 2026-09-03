@@ -1,5 +1,5 @@
 // src/pages/SettingsPage.jsx
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { Camera, Check, Lock, User, Building2, CreditCard, AlertCircle } from 'lucide-react'
@@ -38,7 +38,6 @@ const inputStyle = {
 export default function SettingsPage() {
   const { user, profile, workspace, fetchProfile } = useAuth()
 
-  // Profile state
   const [fullName, setFullName] = useState(profile?.full_name || '')
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '')
   const [avatarUploading, setAvatarUploading] = useState(false)
@@ -46,25 +45,30 @@ export default function SettingsPage() {
   const [profileSaved, setProfileSaved] = useState(false)
   const avatarRef = useRef(null)
 
-  // Workspace state
   const [workspaceName, setWorkspaceName] = useState(workspace?.name || '')
   const [workspaceSaving, setWorkspaceSaving] = useState(false)
   const [workspaceSaved, setWorkspaceSaved] = useState(false)
 
-  // Password state
-  const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [passwordSaving, setPasswordSaving] = useState(false)
   const [passwordMsg, setPasswordMsg] = useState(null)
 
-  // Feedback helper
+  // Sync local state when profile/workspace updates in context
+  useEffect(() => {
+    if (profile?.full_name) setFullName(profile.full_name)
+    if (profile?.avatar_url) setAvatarUrl(profile.avatar_url)
+  }, [profile])
+
+  useEffect(() => {
+    if (workspace?.name) setWorkspaceName(workspace.name)
+  }, [workspace])
+
   function showSaved(setter) {
     setter(true)
     setTimeout(() => setter(false), 2500)
   }
 
-  // Upload avatar
   async function handleAvatarUpload(e) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -88,7 +92,6 @@ export default function SettingsPage() {
     }
   }
 
-  // Save profile
   async function saveProfile() {
     if (!fullName.trim()) return
     setProfileSaving(true)
@@ -98,7 +101,6 @@ export default function SettingsPage() {
     showSaved(setProfileSaved)
   }
 
-  // Save workspace
   async function saveWorkspace() {
     if (!workspaceName.trim() || !workspace) return
     setWorkspaceSaving(true)
@@ -108,7 +110,6 @@ export default function SettingsPage() {
     showSaved(setWorkspaceSaved)
   }
 
-  // Change password
   async function changePassword() {
     setPasswordMsg(null)
     if (!newPassword || newPassword.length < 6) {
@@ -125,7 +126,6 @@ export default function SettingsPage() {
       setPasswordMsg({ type: 'error', text: error.message })
     } else {
       setPasswordMsg({ type: 'success', text: 'Password updated successfully!' })
-      setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
     }
@@ -147,7 +147,6 @@ export default function SettingsPage() {
 
   return (
     <div style={{ maxWidth: 640, margin: '0 auto', padding: '40px 24px' }}>
-      {/* Header */}
       <div style={{ marginBottom: 32 }}>
         <h1 style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.5, marginBottom: 4 }}>Settings</h1>
         <p style={{ fontSize: 14, color: 'var(--color-ink-muted)' }}>Manage your profile, workspace and account.</p>
@@ -160,7 +159,6 @@ export default function SettingsPage() {
           <span style={{ fontSize: 14, fontWeight: 600 }}>Profile</span>
         </div>
         <div style={{ padding: '20px' }}>
-          {/* Avatar */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20 }}>
             <div style={{ position: 'relative' }}>
               <img
@@ -168,22 +166,14 @@ export default function SettingsPage() {
                 alt="avatar"
                 style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-hairline)' }}
               />
-              <button
-                onClick={() => avatarRef.current?.click()}
-                disabled={avatarUploading}
-                style={{
-                  position: 'absolute', bottom: 0, right: 0,
-                  width: 22, height: 22, borderRadius: '50%',
-                  background: 'var(--color-primary)', color: '#fff',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  border: '2px solid var(--color-surface)', cursor: 'pointer',
-                }}>
+              <button onClick={() => avatarRef.current?.click()} disabled={avatarUploading}
+                style={{ position: 'absolute', bottom: 0, right: 0, width: 22, height: 22, borderRadius: '50%', background: 'var(--color-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--color-surface)', cursor: 'pointer' }}>
                 <Camera size={11} />
               </button>
               <input ref={avatarRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarUpload} />
             </div>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 2 }}>{profile?.full_name || 'Your name'}</div>
+              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 2 }}>{fullName || 'Your name'}</div>
               <div style={{ fontSize: 12, color: 'var(--color-ink-faint)', marginBottom: 8 }}>{user?.email}</div>
               <button onClick={() => avatarRef.current?.click()} disabled={avatarUploading}
                 style={{ fontSize: 12, padding: '4px 12px', borderRadius: 9999, border: '1px solid var(--color-hairline)', background: 'var(--color-canvas-soft)', cursor: 'pointer', color: 'var(--color-ink-muted)' }}>
@@ -192,27 +182,16 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Full name */}
           <div style={{ marginBottom: 16 }}>
             <label style={labelStyle}>Full name</label>
-            <input
-              style={inputStyle}
-              value={fullName}
-              onChange={e => setFullName(e.target.value)}
-              placeholder="Your full name"
+            <input style={inputStyle} value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Your full name"
               onFocus={e => e.target.style.borderColor = 'var(--color-primary)'}
-              onBlur={e => e.target.style.borderColor = 'var(--color-hairline)'}
-            />
+              onBlur={e => e.target.style.borderColor = 'var(--color-hairline)'} />
           </div>
 
-          {/* Email — read only */}
           <div style={{ marginBottom: 20 }}>
             <label style={labelStyle}>Email address</label>
-            <input
-              style={{ ...inputStyle, background: 'var(--color-canvas-soft)', color: 'var(--color-ink-muted)', cursor: 'not-allowed' }}
-              value={user?.email || ''}
-              readOnly
-            />
+            <input style={{ ...inputStyle, background: 'var(--color-canvas-soft)', color: 'var(--color-ink-muted)', cursor: 'not-allowed' }} value={user?.email || ''} readOnly />
             <p style={{ fontSize: 12, color: 'var(--color-ink-faint)', marginTop: 5 }}>Email cannot be changed here.</p>
           </div>
 
@@ -231,14 +210,9 @@ export default function SettingsPage() {
         <div style={{ padding: '20px' }}>
           <div style={{ marginBottom: 20 }}>
             <label style={labelStyle}>Workspace name</label>
-            <input
-              style={inputStyle}
-              value={workspaceName}
-              onChange={e => setWorkspaceName(e.target.value)}
-              placeholder="My Workspace"
+            <input style={inputStyle} value={workspaceName} onChange={e => setWorkspaceName(e.target.value)} placeholder="My Workspace"
               onFocus={e => e.target.style.borderColor = 'var(--color-primary)'}
-              onBlur={e => e.target.style.borderColor = 'var(--color-hairline)'}
-            />
+              onBlur={e => e.target.style.borderColor = 'var(--color-hairline)'} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             {saveBtn(saveWorkspace, workspaceSaving, workspaceSaved)}
@@ -253,7 +227,6 @@ export default function SettingsPage() {
           <span style={{ fontSize: 14, fontWeight: 600 }}>Change password</span>
         </div>
         <div style={{ padding: '20px' }}>
-          {/* Only show if signed in with email, not Google */}
           {user?.app_metadata?.provider === 'google' ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 14px', background: '#eff6ff', borderRadius: 8, fontSize: 13, color: '#0075de' }}>
               <AlertCircle size={15} />
@@ -263,40 +236,21 @@ export default function SettingsPage() {
             <>
               <div style={{ marginBottom: 14 }}>
                 <label style={labelStyle}>New password</label>
-                <input
-                  type="password"
-                  style={inputStyle}
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  placeholder="Min. 6 characters"
+                <input type="password" style={inputStyle} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min. 6 characters"
                   onFocus={e => e.target.style.borderColor = 'var(--color-primary)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--color-hairline)'}
-                />
+                  onBlur={e => e.target.style.borderColor = 'var(--color-hairline)'} />
               </div>
               <div style={{ marginBottom: 20 }}>
                 <label style={labelStyle}>Confirm new password</label>
-                <input
-                  type="password"
-                  style={inputStyle}
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="Repeat new password"
+                <input type="password" style={inputStyle} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repeat new password"
                   onFocus={e => e.target.style.borderColor = 'var(--color-primary)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--color-hairline)'}
-                />
+                  onBlur={e => e.target.style.borderColor = 'var(--color-hairline)'} />
               </div>
-
               {passwordMsg && (
-                <div style={{
-                  marginBottom: 14, padding: '10px 14px', borderRadius: 8, fontSize: 13,
-                  background: passwordMsg.type === 'error' ? '#fef2f2' : '#f0fdf4',
-                  color: passwordMsg.type === 'error' ? '#c0392b' : '#166534',
-                  border: `1px solid ${passwordMsg.type === 'error' ? '#fecaca' : '#bbf7d0'}`,
-                }}>
+                <div style={{ marginBottom: 14, padding: '10px 14px', borderRadius: 8, fontSize: 13, background: passwordMsg.type === 'error' ? '#fef2f2' : '#f0fdf4', color: passwordMsg.type === 'error' ? '#c0392b' : '#166534', border: `1px solid ${passwordMsg.type === 'error' ? '#fecaca' : '#bbf7d0'}` }}>
                   {passwordMsg.text}
                 </div>
               )}
-
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 {saveBtn(changePassword, passwordSaving, false, 'Update password')}
               </div>
@@ -316,33 +270,20 @@ export default function SettingsPage() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                 <span style={{ fontSize: 16, fontWeight: 700 }}>{profile?.plan === 'pro' ? 'Pro Plan' : 'Free Plan'}</span>
-                <span style={{
-                  fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 9999,
-                  background: profile?.plan === 'pro' ? '#e8f4ff' : 'var(--color-canvas-soft)',
-                  color: profile?.plan === 'pro' ? '#0075de' : 'var(--color-ink-faint)',
-                }}>
+                <span style={{ fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 9999, background: profile?.plan === 'pro' ? '#e8f4ff' : 'var(--color-canvas-soft)', color: profile?.plan === 'pro' ? '#0075de' : 'var(--color-ink-faint)' }}>
                   {profile?.plan === 'pro' ? 'Active' : 'Free'}
                 </span>
               </div>
               <p style={{ fontSize: 13, color: 'var(--color-ink-muted)' }}>
-                {profile?.plan === 'pro'
-                  ? 'You have full access to all Pro features.'
-                  : 'Upgrade to Pro for unlimited uploads, API access and more.'}
+                {profile?.plan === 'pro' ? 'You have full access to all Pro features.' : 'Upgrade to Pro for unlimited uploads, API access and more.'}
               </p>
             </div>
             {profile?.plan !== 'pro' && (
-              <button style={{
-                padding: '9px 20px', fontSize: 14, fontWeight: 500,
-                background: 'var(--color-primary)', color: '#fff',
-                border: 'none', borderRadius: 9999, cursor: 'pointer',
-                whiteSpace: 'nowrap',
-              }}>
+              <button style={{ padding: '9px 20px', fontSize: 14, fontWeight: 500, background: 'var(--color-primary)', color: '#fff', border: 'none', borderRadius: 9999, cursor: 'pointer', whiteSpace: 'nowrap' }}>
                 Upgrade to Pro
               </button>
             )}
           </div>
-
-          {/* Feature comparison */}
           <div style={{ marginTop: 20, borderTop: '1px solid var(--color-hairline)', paddingTop: 16 }}>
             {[
               { label: 'Unlimited pages', free: true, pro: true },
