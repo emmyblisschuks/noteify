@@ -1,10 +1,10 @@
 // src/components/Sidebar.jsx
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { supabase } from '../lib/supabase'
-import { FileText, CheckSquare, Users, Database, Code2, Plus, Sun, Moon, LogOut, Shield, ChevronDown, ChevronRight } from 'lucide-react'
+import { FileText, CheckSquare, Users, Database, Code2, Plus, Sun, Moon, LogOut, Shield, ChevronDown, ChevronRight, Settings, UserPlus, Building2, PlusCircle } from 'lucide-react'
 
 const NAV = [
   {
@@ -27,12 +27,90 @@ const NAV = [
     icon: <Database size={15} />,
     color: '#2a9d99', bg: '#e6f7f7'
   },
-  {
-    path: '/app/integrations', label: 'Integrations',
-    icon: <Code2 size={15} />,
-    color: '#dd5b00', bg: '#fff1e6'
-  },
 ]
+
+function WorkspaceDropdown({ onClose, user, profile, workspace, signOut, navigate, isAdmin }) {
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose() }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [onClose])
+
+  const menuItem = (icon, label, onClick, danger = false) => (
+    <button onClick={() => { onClick(); onClose() }} style={{
+      display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+      padding: '8px 12px', fontSize: 13, borderRadius: 6,
+      color: danger ? '#c0392b' : 'var(--color-ink-secondary)',
+      background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
+      transition: 'background 0.1s',
+    }}
+      onMouseEnter={e => e.currentTarget.style.background = danger ? '#fef2f2' : 'var(--color-canvas-soft)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+      <span style={{ color: danger ? '#c0392b' : 'var(--color-ink-muted)', display: 'flex', flexShrink: 0 }}>{icon}</span>
+      {label}
+    </button>
+  )
+
+  return (
+    <div ref={ref} style={{
+      position: 'absolute', top: '100%', left: 8, right: 8, zIndex: 200,
+      background: 'var(--color-surface)',
+      border: '1px solid var(--color-hairline)',
+      borderRadius: 10,
+      boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+      overflow: 'hidden',
+      marginTop: 4,
+    }}>
+      {/* Account info */}
+      <div style={{ padding: '12px 14px', borderBottom: '1px solid var(--color-hairline)', background: 'var(--color-canvas-soft)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img
+            src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'U')}&size=36&background=0075de&color=fff`}
+            alt="avatar"
+            style={{ width: 36, height: 36, borderRadius: '50%', flexShrink: 0 }}
+          />
+          <div style={{ overflow: 'hidden' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {profile?.full_name || 'My Account'}
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--color-ink-faint)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user?.email}
+            </div>
+          </div>
+        </div>
+        <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 18, height: 18, borderRadius: 4, background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
+            {workspace?.name?.[0] || 'N'}
+          </div>
+          <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-ink-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {workspace?.name || 'My Workspace'}
+          </span>
+          <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 600, padding: '2px 7px', borderRadius: 9999, background: profile?.plan === 'pro' ? '#e8f4ff' : 'var(--color-hairline)', color: profile?.plan === 'pro' ? '#0075de' : 'var(--color-ink-faint)', whiteSpace: 'nowrap' }}>
+            {profile?.plan === 'pro' ? 'Pro' : 'Free'}
+          </span>
+        </div>
+      </div>
+
+      {/* Menu items */}
+      <div style={{ padding: '6px' }}>
+        {menuItem(<Settings size={14} />, 'Settings', () => navigate('/app/settings'))}
+        {menuItem(<UserPlus size={14} />, 'Invite members', () => {})}
+        {menuItem(<Building2 size={14} />, 'Add account', () => {})}
+        {isAdmin && menuItem(<Shield size={14} />, 'Admin Dashboard', () => navigate('/admin'))}
+      </div>
+
+      <div style={{ borderTop: '1px solid var(--color-hairline)', padding: '6px' }}>
+        {menuItem(<PlusCircle size={14} />, 'New workspace', () => {})}
+      </div>
+
+      <div style={{ borderTop: '1px solid var(--color-hairline)', padding: '6px' }}>
+        {menuItem(<LogOut size={14} />, 'Log out', () => { signOut(); navigate('/') }, true)}
+      </div>
+    </div>
+  )
+}
 
 export default function Sidebar({ pages = [], onNewPage, mobileOpen, setMobileOpen }) {
   const { user, profile, workspace, signOut, isAdmin } = useAuth()
@@ -40,6 +118,7 @@ export default function Sidebar({ pages = [], onNewPage, mobileOpen, setMobileOp
   const navigate = useNavigate()
   const location = useLocation()
   const [pagesOpen, setPagesOpen] = useState(true)
+  const [showDropdown, setShowDropdown] = useState(false)
 
   const handleNewPage = async () => {
     if (!workspace) return
@@ -54,23 +133,59 @@ export default function Sidebar({ pages = [], onNewPage, mobileOpen, setMobileOp
 
   return (
     <>
-      {mobileOpen && <div onClick={() => setMobileOpen(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', zIndex: 99 }} />}
-      <aside className={`sidebar${mobileOpen ? ' open' : ''}`}>
+      {mobileOpen && (
+        <div onClick={() => setMobileOpen(false)} style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          zIndex: 99, width: '100vw', height: '100vh',
+        }} />
+      )}
+      <aside className={`sidebar${mobileOpen ? ' open' : ''}`} style={{ zIndex: 100 }}>
 
         {/* Workspace header */}
-        <div style={{ padding: '12px 12px 8px', borderBottom: '1px solid var(--color-hairline)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px', borderRadius: 'var(--rounded-md)', cursor: 'pointer' }}
-            onClick={() => navigate('/app')}>
-            <div style={{ width: 28, height: 28, borderRadius: 6, background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 13, fontWeight: 700 }}>
+        <div style={{ padding: '12px 12px 8px', borderBottom: '1px solid var(--color-hairline)', position: 'relative' }}>
+          <div
+            onClick={() => setShowDropdown(d => !d)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '6px 8px', borderRadius: 'var(--rounded-md)',
+              cursor: 'pointer', transition: 'background 0.1s',
+              background: showDropdown ? 'var(--color-canvas-soft)' : 'transparent',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--color-canvas-soft)'}
+            onMouseLeave={e => { if (!showDropdown) e.currentTarget.style.background = 'transparent' }}
+          >
+            <div style={{
+              width: 28, height: 28, borderRadius: 6,
+              background: 'var(--color-primary)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontSize: 13, fontWeight: 700, flexShrink: 0,
+            }}>
               {workspace?.name?.[0] || 'N'}
             </div>
             <div style={{ flex: 1, overflow: 'hidden' }}>
               <div style={{ fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {workspace?.name || 'My Workspace'}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--color-ink-faint)' }}>{profile?.plan === 'pro' ? 'Pro plan' : 'Free plan'}</div>
+              <div style={{ fontSize: 11, color: 'var(--color-ink-faint)' }}>
+                {profile?.plan === 'pro' ? 'Pro plan' : 'Free plan'}
+              </div>
             </div>
+            <ChevronDown size={13} color="var(--color-ink-faint)" style={{ flexShrink: 0, transform: showDropdown ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.2s' }} />
           </div>
+
+          {/* Dropdown */}
+          {showDropdown && (
+            <WorkspaceDropdown
+              onClose={() => setShowDropdown(false)}
+              user={user}
+              profile={profile}
+              workspace={workspace}
+              signOut={signOut}
+              navigate={navigate}
+              isAdmin={isAdmin}
+            />
+          )}
         </div>
 
         {/* Nav */}
@@ -86,7 +201,7 @@ export default function Sidebar({ pages = [], onNewPage, mobileOpen, setMobileOp
                   background: isActive ? item.color + '33' : item.bg,
                   color: item.color,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  transition: 'background 0.15s'
+                  transition: 'background 0.15s',
                 }}>
                   {item.icon}
                 </span>
@@ -112,12 +227,15 @@ export default function Sidebar({ pages = [], onNewPage, mobileOpen, setMobileOp
           {pagesOpen && (
             <div>
               {pages.filter(p => !p.is_deleted).map(page => (
-                <button key={page.id} className={`sidebar-row${location.pathname === `/app/page/${page.id}` ? ' active' : ''}`}
+                <button key={page.id}
+                  className={`sidebar-row${location.pathname === `/app/page/${page.id}` ? ' active' : ''}`}
                   onClick={() => { navigate(`/app/page/${page.id}`); setMobileOpen(false) }}>
                   <span style={{ width: 22, height: 22, borderRadius: 5, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <FileText size={12} color="#888" />
                   </span>
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, textAlign: 'left' }}>{page.title || 'Untitled'}</span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, textAlign: 'left' }}>
+                    {page.title || 'Untitled'}
+                  </span>
                 </button>
               ))}
               {pages.length === 0 && (
@@ -129,31 +247,34 @@ export default function Sidebar({ pages = [], onNewPage, mobileOpen, setMobileOp
 
         {/* Bottom */}
         <div style={{ borderTop: '1px solid var(--color-hairline)', padding: 8 }}>
-          {isAdmin && (
-            <button className="sidebar-row" onClick={() => navigate('/admin')}>
-              <span style={{ width: 22, height: 22, borderRadius: 5, background: '#e8f0ff', color: '#213183', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Shield size={13} />
-              </span>
-              <span>Admin Dashboard</span>
-            </button>
-          )}
+          {/* Integrations */}
+          <button className={`sidebar-row${location.pathname === '/app/integrations' ? ' active' : ''}`}
+            onClick={() => { navigate('/app/integrations'); setMobileOpen(false) }}>
+            <span style={{ width: 22, height: 22, borderRadius: 5, background: '#fff1e6', color: '#dd5b00', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Code2 size={13} />
+            </span>
+            <span>Integrations</span>
+          </button>
+
+          {/* Dark mode */}
           <button className="sidebar-row" onClick={toggleTheme}>
             <span style={{ width: 22, height: 22, borderRadius: 5, background: 'var(--color-hairline)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               {theme === 'light' ? <Moon size={13} /> : <Sun size={13} />}
             </span>
             <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
           </button>
-          <button className="sidebar-row" onClick={() => { signOut(); navigate('/') }}>
-            <span style={{ width: 22, height: 22, borderRadius: 5, background: '#fae5e5', color: '#c0392b', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <LogOut size={13} />
-            </span>
-            <span>Sign out</span>
-          </button>
+
+          {/* User info */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 8px 4px', marginTop: 4 }}>
-            <img src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'U')}&size=28`}
-              alt="avatar" style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0 }} />
+            <img
+              src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.full_name || 'U')}&size=28&background=0075de&color=fff`}
+              alt="avatar"
+              style={{ width: 26, height: 26, borderRadius: '50%', flexShrink: 0 }}
+            />
             <div style={{ fontSize: 13, overflow: 'hidden' }}>
-              <div style={{ fontWeight: 500, textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}>{profile?.full_name || user?.email}</div>
+              <div style={{ fontWeight: 500, textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+                {profile?.full_name || user?.email}
+              </div>
             </div>
           </div>
         </div>
