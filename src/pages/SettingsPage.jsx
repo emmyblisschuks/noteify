@@ -1,5 +1,5 @@
 // src/pages/SettingsPage.jsx
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { Camera, Check, Lock, User, Building2, CreditCard, AlertCircle } from 'lucide-react'
@@ -54,16 +54,6 @@ export default function SettingsPage() {
   const [passwordSaving, setPasswordSaving] = useState(false)
   const [passwordMsg, setPasswordMsg] = useState(null)
 
-  // Sync local state when profile/workspace updates in context
-  useEffect(() => {
-    if (profile?.full_name) setFullName(profile.full_name)
-    if (profile?.avatar_url) setAvatarUrl(profile.avatar_url)
-  }, [profile])
-
-  useEffect(() => {
-    if (workspace?.name) setWorkspaceName(workspace.name)
-  }, [workspace])
-
   function showSaved(setter) {
     setter(true)
     setTimeout(() => setter(false), 2500)
@@ -81,12 +71,12 @@ export default function SettingsPage() {
         .upload(path, file, { upsert: true })
       if (uploadError) throw uploadError
       const { data } = supabase.storage.from('avatars').getPublicUrl(path)
-      const url = data.publicUrl
+      const url = data.publicUrl + '?t=' + Date.now()
       await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id)
       setAvatarUrl(url)
-      await fetchProfile(user.id)
+      fetchProfile(user.id)
     } catch (err) {
-      console.error(err)
+      alert('Upload failed: ' + err.message)
     } finally {
       setAvatarUploading(false)
     }
@@ -95,19 +85,35 @@ export default function SettingsPage() {
   async function saveProfile() {
     if (!fullName.trim()) return
     setProfileSaving(true)
-    await supabase.from('profiles').update({ full_name: fullName.trim() }).eq('id', user.id)
-    await fetchProfile(user.id)
+    const { error } = await supabase
+      .from('profiles')
+      .update({ full_name: fullName.trim() })
+      .eq('id', user.id)
+    if (error) {
+      alert('Save failed: ' + error.message)
+    } else {
+      setFullName(fullName.trim())
+      fetchProfile(user.id)
+      showSaved(setProfileSaved)
+    }
     setProfileSaving(false)
-    showSaved(setProfileSaved)
   }
 
   async function saveWorkspace() {
     if (!workspaceName.trim() || !workspace) return
     setWorkspaceSaving(true)
-    await supabase.from('workspaces').update({ name: workspaceName.trim() }).eq('id', workspace.id)
-    await fetchProfile(user.id)
+    const { error } = await supabase
+      .from('workspaces')
+      .update({ name: workspaceName.trim() })
+      .eq('id', workspace.id)
+    if (error) {
+      alert('Save failed: ' + error.message)
+    } else {
+      setWorkspaceName(workspaceName.trim())
+      fetchProfile(user.id)
+      showSaved(setWorkspaceSaved)
+    }
     setWorkspaceSaving(false)
-    showSaved(setWorkspaceSaved)
   }
 
   async function changePassword() {
