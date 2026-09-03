@@ -15,6 +15,7 @@ import DatabasePage from './pages/DatabasePage'
 import ShareView from './pages/ShareView'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import IntegrationsPage from './pages/IntegrationsPage'
+import SettingsPage from './pages/SettingsPage'   // ← NEW
 import { Menu, X } from 'lucide-react'
 
 function ProtectedRoute({ children }) {
@@ -67,6 +68,7 @@ function AppShell() {
             <Route path="/crm" element={<CRMPage />} />
             <Route path="/database" element={<DatabasePage />} />
             <Route path="/integrations" element={<IntegrationsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />  {/* ← NEW */}
           </Routes>
         </div>
       </div>
