@@ -15,7 +15,9 @@ import DatabasePage from './pages/DatabasePage'
 import ShareView from './pages/ShareView'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import IntegrationsPage from './pages/IntegrationsPage'
-import SettingsPage from './pages/SettingsPage'   // ← NEW
+import SettingsPage from './pages/SettingsPage'
+import UpgradePage from './pages/UpgradePage'
+import InvitePage from './pages/InvitePage'
 import { Menu, X } from 'lucide-react'
 
 function ProtectedRoute({ children }) {
@@ -33,6 +35,7 @@ function AppShell() {
   const { workspace } = useAuth()
   const [pages, setPages] = useState([])
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const location = useLocation()
 
   useEffect(() => { if (workspace) fetchPages() }, [workspace])
@@ -51,12 +54,28 @@ function AppShell() {
   const handleNewPage = (page) => setPages(p => [page, ...p])
   const handleTitleChange = (id, title) => setPages(p => p.map(x => x.id === id ? { ...x, title } : x))
 
+  function handleHamburger() {
+    const isMobile = window.innerWidth <= 768
+    if (isMobile) {
+      setMobileOpen(o => !o)
+    } else {
+      setSidebarCollapsed(o => !o)
+    }
+  }
+
   return (
     <div className="app-shell">
-      <Sidebar pages={pages} onNewPage={handleNewPage} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
-      <div className="main-content">
+      <Sidebar
+        pages={pages}
+        onNewPage={handleNewPage}
+        mobileOpen={mobileOpen}
+        setMobileOpen={setMobileOpen}
+        collapsed={sidebarCollapsed}
+        setCollapsed={setSidebarCollapsed}
+      />
+      <div className="main-content" style={{ marginLeft: sidebarCollapsed ? 0 : undefined, transition: 'margin-left 0.22s ease' }}>
         <div className="topbar">
-          <button onClick={() => setMobileOpen(o => !o)} style={{ display: 'flex', padding: 6, borderRadius: 'var(--rounded-md)', color: 'var(--color-ink-muted)' }}>
+          <button onClick={handleHamburger} style={{ display: 'flex', padding: 6, borderRadius: 'var(--rounded-md)', color: 'var(--color-ink-muted)' }}>
             {mobileOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
@@ -68,7 +87,9 @@ function AppShell() {
             <Route path="/crm" element={<CRMPage />} />
             <Route path="/database" element={<DatabasePage />} />
             <Route path="/integrations" element={<IntegrationsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />  {/* ← NEW */}
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/upgrade" element={<UpgradePage />} />
+            <Route path="/invite" element={<InvitePage />} />
           </Routes>
         </div>
       </div>
